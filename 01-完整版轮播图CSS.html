@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            border: 0;
+        }
+        .all {
+            width: 500px;
+            height: 200px;
+            padding: 7px;
+            border: 1px solid #ccc;
+            margin: 100px auto;
+            position: relative;
+        }
+        .screen {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+        .screen li {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            float: left;
+        }
+        .screen ul {
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 3000px;
+        }
+        .all ol {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            line-height: 20px;
+            text-align: center;
+        }
+        .all ol li {
+            float: left;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .all ol li.current {
+            background: yellow;
+        }
+        #arr {
+            display: none;
+        }
+        #arr span {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            margin-top: -20px;
+            background: #000;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-family: '黑体';
+            font-size: 30px;
+            color: #fff;
+            opacity: 0.3;
+            border: 1px solid #fff;
+        }
+        #arr #right {
+            right: 5px;
+            left: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="all" id='box'>
+    <div class="screen">
+        <ul>
+            <li><img src="images/1.jpg" width="500" height="200"/></li>
+            <li><img src="images/2.jpg" width="500" height="200"/></li>
+            <li><img src="images/3.jpg" width="500" height="200"/></li>
+            <li><img src="images/4.jpg" width="500" height="200"/></li>
+            <li><img src="images/5.jpg" width="500" height="200"/></li>
+        </ul>
+        <ol>
+        </ol>
+    </div>
+    <div id="arr"><span id="left">&lt;</span><span id="right">&gt;</span></div>
+</div>
+<script src="animate.js"></script>
+<script>
+    //0 :找对象
+    var box = document.getElementById("box");
+    var screen = box.children[0];
+    var ul = screen.children[0];
+    var ol = screen.children[1];
+    var ulList = ul.children;
+    var arr = document.getElementById("arr");
+    var leftArr = document.getElementById("left");
+    var rightArr = document.getElementById("right");
+    var imgWidth = screen.offsetWidth;
+    var timer = null;
+    //1. 动态生成页面
+    //1.1 生成ol里面的li
+    for (var i = 0; i < ulList.length; i++) {
+        var li = document.createElement("li");
+        ol.appendChild(li);
+        li.innerHTML = i + 1;
+    }
+    var olList = ol.children;
+    olList[0].className = "current";
+    //1.2 生成假图片
+    var clonePic = ulList[0].cloneNode(true);
+    ul.appendChild(clonePic);
+    //2. 简单轮播
+    //2.1 注册事件
+    for (var i = 0; i < olList.length; i++) {
+        var li = olList[i];
+        li.index = i;
+        li.onmouseover = function () {
+            //2.2 当前小方块高亮
+            //2.2.1 干掉所有人
+            for (var j = 0; j < olList.length; j++) {
+                olList[j].className = "";
+            }
+            //2.2.2 留下我自己
+            this.className = "current";
+            //2.3 移动ul
+            //target = -idx * imgWidth
+            var idx = this.index;
+            var target = -idx * imgWidth;
+            animate(ul, target);
+            pic = square = idx;
+        };
+    }
+    //3. 左右焦点的功能
+    //3.1 经过box，箭头显示
+    box.onmouseover = function () {
+        arr.style.display = "block";
+
+        clearInterval(timer);
+    }
+    //3.2 离开box，箭头隐藏
+    box.onmouseout = function () {
+        arr.style.display = "none";
+        timer = setInterval(function () {
+            rightArr.click();
+        }, 1000);
+    }
+    //3.3 点击右箭头
+    var pic = 0;
+    var square = 0;
+    rightArr.onclick = function () {
+
+        //如果是最后一张的话，要立即跳到第一张
+        if (pic == ulList.length - 1) {
+            pic = 0;
+            ul.style.left = "0px";
+        }
+        pic++;
+        var target = -pic * imgWidth;
+        animate(ul, target);
+        if (square == olList.length - 1) {
+            square = 0;
+        } else {
+            square++;
+        }
+        for (var i = 0; i < olList.length; i++) {
+            olList[i].className = "";
+        }
+        olList[square].className = "current";
+    };
+    //3.4 点击左箭头
+    leftArr.onclick = function () {
+        //如果是第一张的时候，让真图片变成假图片
+        if (pic == 0) {
+            pic = ulList.length - 1;
+            ul.style.left = -pic * imgWidth + "px";
+        }
+        pic--;
+        var target = -pic * imgWidth;
+        animate(ul, target);
+        if (square == 0) {
+            square = olList.length - 1;
+        } else {
+            square--;
+        }
+        for (var i = 0; i < olList.length; i++) {
+            olList[i].className = "";
+        }
+        olList[square].className = "current";
+    }
+    //4. 自动播放的功能
+    timer = setInterval(function () {
+        rightArr.click();
+    }, 1000);
+    //5.同步
+    //5.1 点击右箭头
+    //5.2 点击左箭头
+    //5.3 鼠标经过小方块的时候，同步
+
+</script>
+
+</body>
+</html>
